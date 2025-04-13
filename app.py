@@ -1,63 +1,61 @@
 import streamlit as st
-from simulation import simulate_option
+from simulation import simulate_option, black_scholes
 import pandas as pd
-import numpy as np
 
-st.set_page_config(layout="wide")
 
 # Sidebar Inputs
 st.sidebar.header('Input Parameters')
-S = st.sidebar.slider('Stock Price (S)', 30.0, 90.0, 60.0, 1.0)
-K = st.sidebar.slider('Strike Price (K)', 30.0, 90.0, 50.0, 1.0)
+option_type = st.sidebar.selectbox('Option Type', ['call', 'put'])
+
+S = st.sidebar.slider('Stock Price (S)', 0.0, 1000.0, 500.0, 1.0)
+K = st.sidebar.slider('Strike Price (K)', 0.0, 1000.0, 500.0, 1.0)
 sigma = st.sidebar.slider('Volatility (σ)', 0.1, 0.5, 0.3, 0.05)
 r = st.sidebar.slider('Risk-free Rate (r)', 0.01, 0.1, 0.05, 0.01)
-t = st.sidebar.slider('Time to Expiration (years)', 0.25, 2.0, 1.0, 0.25)
+t = st.sidebar.slider('Time to Expiration (years)', 0.25, 10.0, 5.0, 0.25)
 
-# Always simulate based on input
-sim_data = simulate_option(S, K, sigma, r, t)
+# Black-Scholes Fair Value
+bs_premium = black_scholes(S, K, sigma, r, t, option_type)
 
-# Display stats
-st.subheader('Value of Option w/ Geometric Brownian Motion')
-col1, col2, col3 = st.columns(3)
-col1.metric("Premium", f"${sim_data['premium']:.2f}")
-col2.metric("Final Stock Price", f"${sim_data['final_price']:.2f}")
-col3.metric("Terminal P/L", f"${sim_data['pl']:.2f}")
+st.title('Option Pricing and Simulation App')
+st.write("This app allows you to simulate the outcome of an option trade using Geometric Brownian Motion.")
+st.write("You can input the parameters for the option and see how the stock price evolves over time.")
 
-# Convert data to DataFrame for Streamlit charting
-path = pd.Series(sim_data['path'], name='Price Path')
-strike_price = pd.Series([K] * len(path), name='Strike Price')
-payoff = pd.Series([max(price - K, 0) for price in path], name='Payoff')
+st.subheader('')
 
-# Combine all series into a single DataFrame
-chart_data = pd.DataFrame({
-    'Price Path': path,
-    'Strike Price': strike_price,
-    'Payoff': payoff
-})
 
-# Remove the index (reset index and drop it)
-chart_data.reset_index(drop=True, inplace=True)
 
-# Plot the Price Path and Strike Price on one graph
-st.line_chart(chart_data[['Price Path', 'Strike Price']], width=700, height=400, use_container_width=True)
 
-# Plot the Payoff and P/L separately, changing color based on positive or negative P/L
-payoff_color = ['green' if p > 0 else 'red' for p in payoff]  # Color based on positive or negative payoff
+st.subheader('Black-Scholes Fair Value')
+st.write(f"{option_type.capitalize()} Option Price: ${bs_premium:.2f}")
 
-# Plot the P/L graph with color change
-payoff_df = pd.DataFrame({
-    'Time': range(len(path)),
-    'Payoff': payoff,
-    'Color': payoff_color
-})
+# User Input: Actual premium paid
+actual_premium = st.number_input("What did you pay for the option?", min_value=0.0, value=bs_premium, step=0.5)
 
-# Display the P/L graph
-st.subheader('Payoff / P/L')
+# Run Simulation
+if st.button("Run Geometric Brownian Motion Simulation"):
+    sim_data = simulate_option(S, K, sigma, r, t, option_type=option_type)
 
-# We plot the P/L as a line chart, coloring the line based on positive vs negative
-st.line_chart(payoff_df.set_index('Time')[['Payoff']], width=700, height=400, use_container_width=True)
+    st.subheader('Simulated Option Outcome')
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Price Paid", f"${actual_premium:.2f}")
+    col2.metric("Final Stock Price", f"${sim_data['final_price']:.2f}")
+    col3.metric("Profit / Loss", f"${sim_data['payoff'] - actual_premium:.2f}")
 
-# Annotations for the P/L graph
-st.write(f"Premium at t=0: ${sim_data['premium']:.2f}")
-st.write(f"Final Stock Price: ${sim_data['final_price']:.2f}")
-st.write(f"P/L at expiration: ${sim_data['pl']:.2f}")
+    # Create DataFrame for charting
+    price_path = pd.Series(sim_data['path'], name='Stock Price')
+    strike = pd.Series([K] * len(price_path), name='Strike Price')
+    payoff = pd.Series(
+        [max(p - K, 0) if option_type == 'call' else max(K - p, 0) for p in price_path],
+        name='Payoff'
+    )
+
+    chart_df = pd.DataFrame({
+        'Stock Price': price_path,
+        'Strike Price': strike,
+        'Payoff': payoff
+    })
+
+    st.line_chart(chart_df[['Stock Price', 'Strike Price']], use_container_width=True)
+
+    st.subheader('Payoff Over Time')
+    st.line_chart(chart_df[['Payoff']], use_container_width=True)
