@@ -34,7 +34,7 @@ st.write(f"{option_type.capitalize()} Option Price: ${bs_premium:.2f}")
 actual_premium = st.number_input("What did you pay for the option?", min_value=0.0, value=bs_premium, step=0.5)
 
 # Run Simulation
-if st.button("Run Geometric Brownian Motion Simulation"):
+if st.button("Simulate Geometric Brownian Motion"):
     sim_data = simulate_option(S, K, sigma, r, t, option_type=option_type)
 
     st.subheader('Simulated Option Value & Stock Price Path')
