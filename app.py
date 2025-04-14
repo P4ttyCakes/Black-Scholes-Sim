@@ -64,7 +64,7 @@ if st.button("Run Geometric Brownian Motion Simulation"):
     st.line_chart(chart_df[['Payoff']], use_container_width=True)
 
 social_media_links = [
-    "www.linkedin.com/in/patrick-lu-0376152a8",
+    "www.linkedin.com/in/patricklu-0571plu",
     "https://github.com/P4ttyCakes"]
 
 social_media_icons = SocialMediaIcons(social_media_links)
