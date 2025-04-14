@@ -6,7 +6,6 @@ from st_social_media_links import SocialMediaIcons
 
 
 
-# Sidebar Inputs
 st.sidebar.header('Input Parameters')
 option_type = st.sidebar.selectbox('Option Type', ['call', 'put'])
 
@@ -31,7 +30,7 @@ st.subheader('')
 st.subheader('Black-Scholes Fair Value')
 st.write(f"{option_type.capitalize()} Option Price: ${bs_premium:.2f}")
 
-# User Input: Actual premium paid
+#Actual premium paid
 actual_premium = st.number_input("What did you pay for the option?", min_value=0.0, value=bs_premium, step=0.5)
 
 # Run Simulation
@@ -69,7 +68,6 @@ social_media_links = [
 ]
 
 social_media_icons = SocialMediaIcons(social_media_links)
-# Divider and Social Media Footer
 st.markdown("---")
 st.markdown("### Connect with Me (Patrick Lu)")
 social_media_icons.render()

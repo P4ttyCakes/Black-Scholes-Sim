@@ -12,8 +12,10 @@ def black_scholes(S, K, sigma, r, t, option_type='call'):
     else:
         return K * np.exp(-r * t) * norm.cdf(-d2) - S * norm.cdf(-d1)
 
+
 def simulate_option(S, K, sigma, r, t, option_type='call', steps_per_year=252, price_paid=None):
     option_type = option_type.lower()
+
 
     n_steps = int(t * steps_per_year)
     dt = 1 / steps_per_year
@@ -29,7 +31,6 @@ def simulate_option(S, K, sigma, r, t, option_type='call', steps_per_year=252, p
     else:
         payoff = max(K - final_price, 0)
 
-    # Use actual price paid if provided
     if price_paid is None:
         price_paid = premium
 
